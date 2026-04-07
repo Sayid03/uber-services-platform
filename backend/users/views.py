@@ -1,8 +1,8 @@
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.exceptions import PermissionDenied
 
-from .models import ProviderProfile
 from .serializers import RegisterSerializer, UserSerializer, ProviderProfileSerializer
 
 class RegisterView(generics.CreateAPIView):
@@ -24,6 +24,6 @@ class ProviderProfileUpdateView(generics.RetrieveUpdateAPIView):
         user = self.request.user
 
         if user.role != 'provider':
-            raise permissions.PermissionDenied('Only providers can access this profile.')
+            raise PermissionDenied('Only providers can access this profile.')
 
         return user.provider_profile
