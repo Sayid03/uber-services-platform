@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
 
-    'users',
+    'users.apps.UsersConfig',
     'services',
     'bookings',
     'reviews',
