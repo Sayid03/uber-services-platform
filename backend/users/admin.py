@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User
+from .models import User, ProviderProfile
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
@@ -18,4 +18,15 @@ class CustomUserAdmin(UserAdmin):
         'is_verified_provider',
         'is_staff',
         'is_active',
+    )
+
+@admin.register(ProviderProfile)
+class ProviderProfileAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'user',
+        'region',
+        'district',
+        'experience_years',
+        'is_available',
     )
