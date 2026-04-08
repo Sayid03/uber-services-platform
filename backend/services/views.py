@@ -68,7 +68,7 @@ class ServiceDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         user = self.request.user
         queryset = Service.objects.select_related('provider', 'category').annotate(
             average_rating=Avg('reviews__rating'),
-            reviews_count=Count('reviews')
+            reviews_count=Count('reviews', distinct=True)
         )
 
         if user.is_authenticated and user.role == 'provider':

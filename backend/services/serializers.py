@@ -9,7 +9,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class ServiceSerializer(serializers.ModelSerializer):
     provider_username = serializers.CharField(source='provider.username', read_only=True)
     category_name = serializers.CharField(source='category.name', read_only=True)
-    average_rating = serializers.FloatField(read_only=True)
+    average_rating = serializers.SerializerMethodField()
     reviews_count = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -61,3 +61,8 @@ class ServiceSerializer(serializers.ModelSerializer):
             })
 
         return attrs
+    
+    def get_average_rating(self, obj):
+        if obj.average_rating is None:
+            return None
+        return round(obj.average_rating, 2)

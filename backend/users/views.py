@@ -42,7 +42,7 @@ class ProviderListAPIView(generics.ListAPIView):
     def get_queryset(self):
         queryset = User.objects.filter(role='provider').select_related('provider_profile').annotate(
             average_rating=Avg('received_reviews__rating'),
-            reviews_count=Count('received_reviews'),
+            reviews_count=Count('received_reviews', distinct=True),
             services_count=Count('services', distinct=True),
         )
 
