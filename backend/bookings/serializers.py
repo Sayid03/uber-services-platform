@@ -36,7 +36,12 @@ class BookingSerializer(serializers.ModelSerializer):
         service = attrs.get('service')
         request = self.context.get('request')
 
-        if service and not service.is_active:
+        if not service:
+            raise serializers.ValidationError({
+                'service': 'Service is required.'
+            })
+
+        if not service.is_active:
             raise serializers.ValidationError({
                 'service': 'Inactive services cannot be booked.'
             })
