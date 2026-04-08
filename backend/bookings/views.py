@@ -1,10 +1,10 @@
 from django.db import models
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters
-from rest_framework.exceptions import PermissionDenied
 
 from .models import Booking
 from .serializers import BookingSerializer, BookingStatusUpdateSerializer
+from .permissions import IsCustomer, IsBookingParticipant, IsBookingProvider
 
 class BookingListCreateAPIView(generics.ListCreateAPIView):
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
@@ -16,6 +16,8 @@ class BookingListCreateAPIView(generics.ListCreateAPIView):
         return BookingSerializer
 
     def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsCustomer()]
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
@@ -31,21 +33,17 @@ class BookingListCreateAPIView(generics.ListCreateAPIView):
         ).filter(customer=user)
 
     def perform_create(self, serializer):
-        user = self.request.user
         service = serializer.validated_data['service']
 
-        if user.role != 'customer':
-            raise PermissionDenied('Only customers can create bookings.')
-
         serializer.save(
-            customer=user,
+            customer=self.request.user,
             provider=service.provider,
             estimated_price=service.price
         )
 
 class BookingDetailAPIView(generics.RetrieveAPIView):
     serializer_class = BookingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsBookingParticipant]
 
     def get_queryset(self):
         user = self.request.user
@@ -58,20 +56,9 @@ class BookingDetailAPIView(generics.RetrieveAPIView):
     
 class BookingStatusUpdateAPIView(generics.UpdateAPIView):
     serializer_class = BookingStatusUpdateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsBookingProvider]
 
     def get_queryset(self):
-        user = self.request.user
-
         return Booking.objects.select_related(
             'customer', 'provider', 'service'
-        ).filter(provider=user)
-
-    def perform_update(self, serializer):
-        booking = self.get_object()
-        user = self.request.user
-
-        if booking.provider != user:
-            raise PermissionDenied('Only the provider can update booking status.')
-
-        serializer.save()
+        )
