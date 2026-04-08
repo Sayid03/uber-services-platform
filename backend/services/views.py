@@ -21,6 +21,9 @@ class ServiceListCreateAPIView(generics.ListCreateAPIView):
     def get_queryset(self):
         queryset = Service.objects.select_related('provider', 'category').all()
 
+        if not self.request.user.is_authenticated:
+            queryset = queryset.filter(is_active=True)
+
         provider_id = self.request.query_params.get('provider')
         if provider_id:
             queryset = queryset.filter(provider_id=provider_id)
