@@ -1,5 +1,6 @@
 from django.db.models import Avg, Count
-from rest_framework import generics, permissions
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics, permissions, filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied
@@ -11,6 +12,7 @@ from .serializers import (
     ProviderProfileSerializer,
     ProviderListSerializer,
 )
+from .filters import ProviderFilter
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
@@ -38,38 +40,15 @@ class ProviderProfileUpdateView(generics.RetrieveUpdateAPIView):
 class ProviderListAPIView(generics.ListAPIView):
     serializer_class = ProviderListSerializer
     permission_classes = [permissions.AllowAny]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    filterset_class = ProviderFilter
+    search_fields = ['username', 'first_name', 'last_name', 'provider_profile__region', 'provider_profile__district']
+    ordering_fields = ['average_rating', 'reviews_count', 'services_count', 'username']
+    ordering = ['-average_rating', '-reviews_count']
 
     def get_queryset(self):
-        queryset = User.objects.filter(role='provider').select_related('provider_profile').annotate(
+        return User.objects.filter(role='provider').select_related('provider_profile').annotate(
             average_rating=Avg('received_reviews__rating'),
             reviews_count=Count('received_reviews', distinct=True),
             services_count=Count('services', distinct=True),
         )
-
-        verified = self.request.query_params.get('verified')
-        if verified is not None:
-            if verified.lower() == 'true':
-                queryset = queryset.filter(is_verified_provider=True)
-            elif verified.lower() == 'false':
-                queryset = queryset.filter(is_verified_provider=False)
-
-        region = self.request.query_params.get('region')
-        if region:
-            queryset = queryset.filter(provider_profile__region__icontains=region)
-
-        district = self.request.query_params.get('district')
-        if district:
-            queryset = queryset.filter(provider_profile__district__icontains=district)
-
-        available = self.request.query_params.get('available')
-        if available is not None:
-            if available.lower() == 'true':
-                queryset = queryset.filter(provider_profile__is_available=True)
-            elif available.lower() == 'false':
-                queryset = queryset.filter(provider_profile__is_available=False)
-
-        min_rating = self.request.query_params.get('min_rating')
-        if min_rating:
-            queryset = queryset.filter(average_rating__gte=min_rating)
-
-        return queryset.order_by('-average_rating', '-reviews_count')
