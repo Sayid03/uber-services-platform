@@ -33,6 +33,15 @@ class ServiceSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         read_only_fields = ['provider', 'created_at', 'updated_at']
+    
+    def get_average_rating(self, obj):
+        value = getattr(obj, 'average_rating', None)
+        if value is None:
+            return None
+        return round(value, 2)
+
+    def get_reviews_count(self, obj):
+        return getattr(obj, 'reviews_count', 0)
 
     def validate(self, attrs):
         pricing_type = attrs.get('pricing_type', getattr(self.instance, 'pricing_type', None))
@@ -61,8 +70,3 @@ class ServiceSerializer(serializers.ModelSerializer):
             })
 
         return attrs
-    
-    def get_average_rating(self, obj):
-        if obj.average_rating is None:
-            return None
-        return round(obj.average_rating, 2)
