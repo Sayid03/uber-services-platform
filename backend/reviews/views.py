@@ -3,6 +3,7 @@ from rest_framework import generics, permissions, filters
 
 from .models import Review
 from .serializers import ReviewSerializer
+from .permissions import IsCustomer
 
 class ReviewListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = ReviewSerializer
@@ -14,7 +15,7 @@ class ReviewListCreateAPIView(generics.ListCreateAPIView):
     def get_queryset(self):
         queryset = Review.objects.select_related(
             'booking', 'customer', 'provider', 'service'
-        ).all()
+        )
 
         provider_id = self.request.query_params.get('provider')
         if provider_id:
@@ -28,9 +29,9 @@ class ReviewListCreateAPIView(generics.ListCreateAPIView):
     
     def get_permissions(self):
         if self.request.method == 'POST':
-            return [permissions.IsAuthenticated()]
+            return [IsCustomer()]
         return [permissions.AllowAny()]
-    
+
     def perform_create(self, serializer):
         booking = serializer.validated_data['booking']
 
@@ -43,6 +44,6 @@ class ReviewListCreateAPIView(generics.ListCreateAPIView):
 class ReviewDetailAPIView(generics.RetrieveAPIView):
     queryset = Review.objects.select_related(
         'booking', 'customer', 'provider', 'service'
-    ).all()
+    )
     serializer_class = ReviewSerializer
     permission_classes = [permissions.AllowAny]
