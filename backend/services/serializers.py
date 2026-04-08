@@ -33,10 +33,32 @@ class ServiceSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         pricing_type = attrs.get('pricing_type', getattr(self.instance, 'pricing_type', None))
         price = attrs.get('price', getattr(self.instance, 'price', None))
+        title = attrs.get('title', getattr(self.instance, 'title', None))
+        description = attrs.get('description', getattr(self.instance, 'description', None))
+
+        if not title or len(title.strip()) < 5:
+            raise serializers.ValidationError({
+                'title': 'Title must be at least 5 characters long.'
+            })
+
+        if not description or len(description.strip()) < 15:
+            raise serializers.ValidationError({
+                'description': 'Description must be at least 15 characters long.'
+            })
 
         if pricing_type in ['fixed', 'hourly'] and price is None:
             raise serializers.ValidationError({
                 'price': 'Price is required for fixed or hourly pricing.'
+            })
+
+        if pricing_type == 'negotiable' and price is not None and price < 0:
+            raise serializers.ValidationError({
+                'price': 'Price cannot be negative.'
+            })
+
+        if price is not None and price < 0:
+            raise serializers.ValidationError({
+                'price': 'Price cannot be negative.'
             })
 
         return attrs
