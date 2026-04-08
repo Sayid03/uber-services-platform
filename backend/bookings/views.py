@@ -1,3 +1,4 @@
+from django.db import models
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters
 from rest_framework.exceptions import PermissionDenied
@@ -28,7 +29,7 @@ class BookingListCreateAPIView(generics.ListCreateAPIView):
         return Booking.objects.select_related(
             'customer', 'provider', 'service'
         ).filter(customer=user)
-    
+
     def perform_create(self, serializer):
         user = self.request.user
         service = serializer.validated_data['service']
@@ -51,9 +52,9 @@ class BookingDetailAPIView(generics.RetrieveAPIView):
 
         return Booking.objects.select_related(
             'customer', 'provider', 'service'
-        ).filter(customer=user) | Booking.objects.select_related(
-            'customer', 'provider', 'service'
-        ).filter(provider=user)
+        ).filter(
+            models.Q(customer=user) | models.Q(provider=user)
+        )
     
 class BookingStatusUpdateAPIView(generics.UpdateAPIView):
     serializer_class = BookingStatusUpdateSerializer
@@ -65,11 +66,10 @@ class BookingStatusUpdateAPIView(generics.UpdateAPIView):
         return Booking.objects.select_related(
             'customer', 'provider', 'service'
         ).filter(provider=user)
-    
+
     def perform_update(self, serializer):
         booking = self.get_object()
         user = self.request.user
-        new_status = serializer.validated_data['status']
 
         if booking.provider != user:
             raise PermissionDenied('Only the provider can update booking status.')
