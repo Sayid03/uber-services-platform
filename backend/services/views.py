@@ -1,9 +1,11 @@
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, filters
 from rest_framework.exceptions import PermissionDenied
 
 from .models import Category, Service
 from .serializers import CategorySerializer, ServiceSerializer
+from .permissions import IsProvider, IsServiceOwnerOrReadOnly
 
 class CategoryListAPIView(generics.ListAPIView):
     queryset = Category.objects.all()
@@ -19,9 +21,11 @@ class ServiceListCreateAPIView(generics.ListCreateAPIView):
     ordering = ['-created_at']
 
     def get_queryset(self):
-        queryset = Service.objects.select_related('provider', 'category').all()
+        queryset = Service.objects.select_related('provider', 'category')
 
-        if not self.request.user.is_authenticated:
+        if self.request.user.is_authenticated and self.request.user.role == 'provider':
+            queryset = queryset.filter(Q(is_active=True) | Q(provider=self.request.user))
+        else:
             queryset = queryset.filter(is_active=True)
 
         provider_id = self.request.query_params.get('provider')
@@ -32,39 +36,21 @@ class ServiceListCreateAPIView(generics.ListCreateAPIView):
     
     def get_permissions(self):
         if self.request.method == 'POST':
-            return [permissions.IsAuthenticated()]
+            return [IsProvider()]
         return [permissions.AllowAny()]
-    
+
     def perform_create(self, serializer):
-        user = self.request.user
-
-        if user.role != 'provider':
-            raise PermissionDenied('Only providers can create services.')
-
-        serializer.save(provider=user)
+        serializer.save(provider=self.request.user)
 
 class ServiceDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ServiceSerializer
-    queryset = Service.objects.select_related('provider', 'category').all()
+    permission_classes = [IsServiceOwnerOrReadOnly]
 
-    def get_permissions(self):
-        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
-            return [permissions.IsAuthenticated()]
-        return [permissions.AllowAny()]
-
-    def perform_update(self, serializer):
-        service = self.get_object()
+    def get_queryset(self):
         user = self.request.user
+        queryset = Service.objects.select_related('provider', 'category')
 
-        if service.provider != user:
-            raise PermissionDenied('You can only update your own services.')
+        if user.is_authenticated and user.role == 'provider':
+            return queryset.filter(Q(is_active=True) | Q(provider=user))
 
-        serializer.save()
-
-    def perform_destroy(self, instance):
-        user = self.request.user
-
-        if instance.provider != user:
-            raise PermissionDenied('You can only delete your own services.')
-
-        instance.delete()
+        return queryset.filter(is_active=True)
