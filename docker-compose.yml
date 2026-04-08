@@ -12,21 +12,18 @@ services:
       - "5432:5432"
 
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: service_web
     command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    working_dir: /app/backend
     volumes:
       - .:/app
     ports:
       - "8000:8000"
-    environment:
-      SECRET_KEY: your-secret-key
-      DEBUG: "True"
-      DB_NAME: service_db
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_HOST: db
-      DB_PORT: 5432
+    env_file:
+      - backend/.env
     depends_on:
       - db
 
