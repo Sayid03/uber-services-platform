@@ -31,6 +31,27 @@ class UserSerializer(serializers.ModelSerializer):
             'provider_profile',
         ]
 
+class ProviderListSerializer(serializers.ModelSerializer):
+    provider_profile = ProviderProfileSerializer(read_only=True)
+    average_rating = serializers.FloatField(read_only=True)
+    reviews_count = serializers.IntegerField(read_only=True)
+    services_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'profile_image',
+            'is_verified_provider',
+            'average_rating',
+            'reviews_count',
+            'services_count',
+            'provider_profile',
+        ]
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     confirm_password = serializers.CharField(write_only=True)
