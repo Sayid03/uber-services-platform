@@ -6,6 +6,10 @@ from .serializers import ReviewSerializer
 from .permissions import IsCustomer
 
 class ReviewListCreateAPIView(generics.ListCreateAPIView):
+    """
+    GET: List reviews with optional filtering by provider, service, and rating.
+    POST: Create a review as a customer for a completed booking.
+    """
     serializer_class = ReviewSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['provider', 'service', 'rating']
@@ -13,20 +17,10 @@ class ReviewListCreateAPIView(generics.ListCreateAPIView):
     ordering = ['-created_at']
 
     def get_queryset(self):
-        queryset = Review.objects.select_related(
+        return Review.objects.select_related(
             'booking', 'customer', 'provider', 'service'
-        )
+        ).all()
 
-        provider_id = self.request.query_params.get('provider')
-        if provider_id:
-            queryset = queryset.filter(provider_id=provider_id)
-
-        service_id = self.request.query_params.get('service')
-        if service_id:
-            queryset = queryset.filter(service_id=service_id)
-
-        return queryset
-    
     def get_permissions(self):
         if self.request.method == 'POST':
             return [IsCustomer()]
@@ -34,7 +28,6 @@ class ReviewListCreateAPIView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         booking = serializer.validated_data['booking']
-
         serializer.save(
             customer=self.request.user,
             provider=booking.provider,
@@ -42,6 +35,9 @@ class ReviewListCreateAPIView(generics.ListCreateAPIView):
         )
 
 class ReviewDetailAPIView(generics.RetrieveAPIView):
+    """
+    GET: Retrieve a single review.
+    """
     queryset = Review.objects.select_related(
         'booking', 'customer', 'provider', 'service'
     )

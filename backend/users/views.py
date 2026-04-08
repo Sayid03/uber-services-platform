@@ -26,21 +26,22 @@ class MeView(APIView):
         return Response(serializer.data)
 
 class ProviderProfileUpdateView(generics.RetrieveUpdateAPIView):
-    serializer_class = ProviderProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ProviderProfileSerializer
 
     def get_object(self):
         user = self.request.user
-
         if user.role != 'provider':
             raise PermissionDenied('Only providers can access this profile.')
-
         return user.provider_profile
 
 class ProviderListAPIView(generics.ListAPIView):
+    """
+    GET: List providers with profile info, rating, and filtering options.
+    """
     serializer_class = ProviderListSerializer
     permission_classes = [permissions.AllowAny]
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = ProviderFilter
     search_fields = ['username', 'first_name', 'last_name', 'provider_profile__region', 'provider_profile__district']
     ordering_fields = ['average_rating', 'reviews_count', 'services_count', 'username']

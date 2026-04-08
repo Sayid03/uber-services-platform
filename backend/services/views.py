@@ -13,9 +13,13 @@ class CategoryListAPIView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
 
 class ServiceListCreateAPIView(generics.ListCreateAPIView):
+    """
+    GET: List active services with filtering, search, and ordering.
+    POST: Create a new service as an authenticated provider.
+    """
     serializer_class = ServiceSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ServiceFilter
+    filterset_class = ServiceFilter
     search_fields = ['title', 'description', 'location', 'provider__username']
     ordering_fields = ['created_at', 'price', 'title', 'average_rating', 'reviews_count']
     ordering = ['-created_at']
@@ -23,7 +27,7 @@ class ServiceListCreateAPIView(generics.ListCreateAPIView):
     def get_queryset(self):
         queryset = Service.objects.select_related('provider', 'category').annotate(
             average_rating=Avg('reviews__rating'),
-            reviews_count=Count('reviews')
+            reviews_count=Count('reviews', distinct=True)
         )
 
         if self.request.user.is_authenticated and self.request.user.role == 'provider':
@@ -31,28 +35,12 @@ class ServiceListCreateAPIView(generics.ListCreateAPIView):
         else:
             queryset = queryset.filter(is_active=True)
 
-        provider_id = self.request.query_params.get('provider')
-        if provider_id:
-            queryset = queryset.filter(provider_id=provider_id)
-
-        min_price = self.request.query_params.get('min_price')
-        if min_price:
-            queryset = queryset.filter(price__gte=min_price)
-
-        max_price = self.request.query_params.get('max_price')
-        if max_price:
-            queryset = queryset.filter(price__lte=max_price)
-
         min_rating = self.request.query_params.get('min_rating')
         if min_rating:
             queryset = queryset.filter(average_rating__gte=min_rating)
 
-        location = self.request.query_params.get('location')
-        if location:
-            queryset = queryset.filter(location__icontains=location)
-
         return queryset
-    
+
     def get_permissions(self):
         if self.request.method == 'POST':
             return [IsProvider()]
@@ -62,6 +50,10 @@ class ServiceListCreateAPIView(generics.ListCreateAPIView):
         serializer.save(provider=self.request.user)
 
 class ServiceDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    GET: Retrieve a single active service.
+    PATCH/DELETE: Update or delete a service only if owned by the provider.
+    """
     serializer_class = ServiceSerializer
     permission_classes = [IsServiceOwnerOrReadOnly]
 

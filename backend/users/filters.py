@@ -5,6 +5,7 @@ class ProviderFilter(django_filters.FilterSet):
     region = django_filters.CharFilter(field_name='provider_profile__region', lookup_expr='icontains')
     district = django_filters.CharFilter(field_name='provider_profile__district', lookup_expr='icontains')
     min_rating = django_filters.NumberFilter(method='filter_min_rating')
+    is_verified_provider = django_filters.BooleanFilter(field_name='is_verified_provider')
 
     class Meta:
         model = User
