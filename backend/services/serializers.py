@@ -9,6 +9,8 @@ class CategorySerializer(serializers.ModelSerializer):
 class ServiceSerializer(serializers.ModelSerializer):
     provider_username = serializers.CharField(source='provider.username', read_only=True)
     category_name = serializers.CharField(source='category.name', read_only=True)
+    average_rating = serializers.FloatField(read_only=True)
+    reviews_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Service
@@ -25,6 +27,8 @@ class ServiceSerializer(serializers.ModelSerializer):
             'estimated_duration_hours',
             'location',
             'is_active',
+            'average_rating',
+            'reviews_count',
             'created_at',
             'updated_at',
         ]
@@ -49,11 +53,6 @@ class ServiceSerializer(serializers.ModelSerializer):
         if pricing_type in ['fixed', 'hourly'] and price is None:
             raise serializers.ValidationError({
                 'price': 'Price is required for fixed or hourly pricing.'
-            })
-
-        if pricing_type == 'negotiable' and price is not None and price < 0:
-            raise serializers.ValidationError({
-                'price': 'Price cannot be negative.'
             })
 
         if price is not None and price < 0:
