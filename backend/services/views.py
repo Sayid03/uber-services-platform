@@ -5,6 +5,7 @@ from rest_framework import generics, permissions, filters
 from .models import Category, Service
 from .serializers import CategorySerializer, ServiceSerializer
 from .permissions import IsProvider, IsServiceOwnerOrReadOnly
+from .filters import ServiceFilter
 
 class CategoryListAPIView(generics.ListAPIView):
     queryset = Category.objects.all()
@@ -14,7 +15,7 @@ class CategoryListAPIView(generics.ListAPIView):
 class ServiceListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = ServiceSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['category', 'pricing_type', 'is_active']
+    filterset_fields = ServiceFilter
     search_fields = ['title', 'description', 'location', 'provider__username']
     ordering_fields = ['created_at', 'price', 'title', 'average_rating', 'reviews_count']
     ordering = ['-created_at']
