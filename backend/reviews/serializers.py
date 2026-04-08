@@ -38,21 +38,16 @@ class ReviewSerializer(serializers.ModelSerializer):
         booking = attrs.get('booking')
 
         if not booking:
-            raise serializers.ValidationError({
-                'booking': 'Booking is required.'
-            })
+            raise serializers.ValidationError({'booking': 'Booking is required.'})
 
         if booking.status != 'completed':
             raise serializers.ValidationError({
                 'booking': 'You can only review completed bookings.'
             })
 
-        if request.user.role != 'customer':
-            raise serializers.ValidationError('Only customers can leave reviews.')
-
         if booking.customer != request.user:
             raise serializers.ValidationError({
-                'booking': 'You can only review your own bookings.'
+                'booking': 'You can only review your own completed bookings.'
             })
 
         if hasattr(booking, 'review'):
