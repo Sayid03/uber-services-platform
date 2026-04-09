@@ -8,5 +8,5 @@ from .views import (
 urlpatterns = [
     path('categories/', CategoryListAPIView.as_view(), name='category-list'),
     path('', ServiceListCreateAPIView.as_view(), name='service-list-create'),
-    path('<int:pk>/', ServiceDetailAPIView.as_view(), name='service-detail'),
+    path('<int:id>/', ServiceDetailAPIView.as_view(), name='service-detail'),
 ]
