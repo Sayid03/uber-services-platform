@@ -8,8 +8,11 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d service_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7-alpine
@@ -35,15 +38,17 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: core.settings.prod
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
   
   celery:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: service_celery
-    command: celery -A core worker -l info
+    command: sh -c "sleep 20 && celery -A core worker -l info"
     working_dir: /app/backend
     volumes:
       - .:/app
@@ -60,7 +65,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: service_celery_beat
-    command: celery -A core beat -l info
+    command: sh -c "sleep 30 && celery -A core beat -l info"
     working_dir: /app/backend
     volumes:
       - .:/app
