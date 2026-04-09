@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from typing import Optional
+
 from .models import Category, Service
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -34,13 +36,13 @@ class ServiceSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['provider', 'created_at', 'updated_at']
     
-    def get_average_rating(self, obj):
+    def get_average_rating(self, obj) -> Optional[float]:
         value = getattr(obj, 'average_rating', None)
         if value is None:
             return None
         return round(value, 2)
 
-    def get_reviews_count(self, obj):
+    def get_reviews_count(self, obj) -> int:
         return getattr(obj, 'reviews_count', 0)
 
     def validate(self, attrs):

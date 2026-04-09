@@ -12,6 +12,7 @@ class BookingListCreateAPIView(generics.ListCreateAPIView):
     Customers see their bookings; providers see bookings for their services.
     POST: Create a new booking as a customer.
     """
+    queryset = Booking.objects.none()
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['status', 'service', 'provider']
     ordering_fields = ['booking_date', 'created_at']
@@ -26,7 +27,13 @@ class BookingListCreateAPIView(generics.ListCreateAPIView):
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Booking.objects.none()
+
         user = self.request.user
+
+        if not user.is_authenticated:
+            return Booking.objects.none()
 
         if user.role == 'provider':
             return Booking.objects.select_related(

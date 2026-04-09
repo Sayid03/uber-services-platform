@@ -4,6 +4,7 @@ from rest_framework import generics, permissions, filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied
+from drf_spectacular.utils import extend_schema
 
 from .models import User
 from .serializers import (
@@ -18,6 +19,7 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
+@extend_schema(responses=UserSerializer)
 class MeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 

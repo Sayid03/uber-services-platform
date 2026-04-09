@@ -11,6 +11,12 @@ services:
     ports:
       - "5432:5432"
 
+  redis:
+    image: redis:7-alpine
+    container_name: service_redis
+    ports:
+      - "6379:6379"
+
   web:
     build:
       context: .
@@ -26,6 +32,21 @@ services:
       - backend/.env
     depends_on:
       - db
+  
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: service_celery
+    command: celery -A core worker -l info
+    working_dir: /app/backend
+    volumes:
+      - .:/app
+    env_file:
+      - backend/.env
+    depends_on:
+      - db
+      - redis
 
 volumes:
   postgres_data:
