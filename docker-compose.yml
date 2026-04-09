@@ -96,6 +96,13 @@ services:
       - certbot_conf:/etc/letsencrypt
     depends_on:
       - web
+  
+  certbot:
+    image: certbot/certbot:latest
+    container_name: service_certbot
+    volumes:
+      - certbot_www:/var/www/certbot
+      - certbot_conf:/etc/letsencrypt
 
 volumes:
   postgres_data:
