@@ -32,6 +32,8 @@ services:
       - "8000"
     env_file:
       - backend/.env
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings.prod
     depends_on:
       - db
       - redis
@@ -47,6 +49,8 @@ services:
       - .:/app
     env_file:
       - backend/.env
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings.prod
     depends_on:
       - db
       - redis
@@ -62,6 +66,8 @@ services:
       - .:/app
     env_file:
       - backend/.env
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings.prod
     depends_on:
       - db
       - redis
