@@ -189,13 +189,9 @@ SECURE_HSTS_PRELOAD=False
 
 ## Running the Server with Docker on a Local Machine
 
-There are **two important things** to fix before the project can run smoothly on localhost:
+There is **one important thing** to fix before the project can run smoothly on localhost:
 
-1. In `docker-compose.yml`, the services reference `Dockerfile`, but the repository file is currently named `dockerfile`.
-2. `nginx/default.conf` is configured for the production Azure domain and expects existing Let’s Encrypt SSL certificates, so it is **not suitable for localhost out of the box**.
-
-### Option A — Recommended local setup
-Run the backend stack **without Nginx and Certbot**. This is the easiest way to run locally.
+- `nginx/default.conf` is configured for the production Azure domain and expects existing Let’s Encrypt SSL certificates, so it is **not suitable for localhost out of the box**.
 
 ### Step 1: Clone the repository
 ```bash
