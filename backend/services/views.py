@@ -56,6 +56,8 @@ class ServiceDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     """
     serializer_class = ServiceSerializer
     permission_classes = [IsServiceOwnerOrReadOnly]
+    lookup_field = "id"
+    lookup_url_kwarg = "id"
 
     def get_queryset(self):
         user = self.request.user

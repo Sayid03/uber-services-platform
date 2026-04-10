@@ -55,3 +55,18 @@ class ProviderListAPIView(generics.ListAPIView):
             reviews_count=Count('received_reviews', distinct=True),
             services_count=Count('services', distinct=True),
         )
+
+class ProviderDetailAPIView(generics.RetrieveAPIView):
+    serializer_class = ProviderListSerializer
+    permission_classes = [permissions.AllowAny]
+    lookup_field = "id"
+    lookup_url_kwarg = "id"
+
+    def get_queryset(self):
+        return User.objects.filter(role='provider').select_related(
+            'provider_profile'
+        ).annotate(
+            average_rating=Avg('received_reviews__rating'),
+            reviews_count=Count('received_reviews', distinct=True),
+            services_count=Count('services', distinct=True),
+        )

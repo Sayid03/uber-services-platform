@@ -43,3 +43,5 @@ class ReviewDetailAPIView(generics.RetrieveAPIView):
     )
     serializer_class = ReviewSerializer
     permission_classes = [permissions.AllowAny]
+    lookup_field = "id"
+    lookup_url_kwarg = "id"

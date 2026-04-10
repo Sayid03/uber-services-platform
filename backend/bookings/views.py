@@ -58,6 +58,8 @@ class BookingDetailAPIView(generics.RetrieveAPIView):
     """
     serializer_class = BookingSerializer
     permission_classes = [permissions.IsAuthenticated, IsBookingParticipant]
+    lookup_field = "id"
+    lookup_url_kwarg = "id"
 
     def get_queryset(self):
         user = self.request.user
@@ -73,6 +75,8 @@ class BookingStatusUpdateAPIView(generics.UpdateAPIView):
     """
     serializer_class = BookingStatusUpdateSerializer
     permission_classes = [permissions.IsAuthenticated, IsBookingProvider]
+    lookup_field = "id"
+    lookup_url_kwarg = "id"
 
     def get_queryset(self):
         return Booking.objects.select_related(
