@@ -20,24 +20,44 @@ class ServiceListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = ServiceSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = ServiceFilter
-    search_fields = ['title', 'description', 'location', 'provider__username']
     ordering_fields = ['created_at', 'price', 'title', 'average_rating', 'reviews_count']
     ordering = ['-created_at']
 
     def get_queryset(self):
-        queryset = Service.objects.select_related('provider', 'category').annotate(
+        queryset = Service.objects.select_related(
+            'provider',
+            'category'
+        ).annotate(
             average_rating=Avg('reviews__rating'),
             reviews_count=Count('reviews', distinct=True)
         )
 
-        if self.request.user.is_authenticated and self.request.user.role == 'provider':
-            queryset = queryset.filter(Q(is_active=True) | Q(provider=self.request.user))
+        if (
+            self.request.user.is_authenticated
+            and self.request.user.role == 'provider'
+        ):
+            queryset = queryset.filter(
+                Q(is_active=True) |
+                Q(provider=self.request.user)
+            )
         else:
             queryset = queryset.filter(is_active=True)
 
         min_rating = self.request.query_params.get('min_rating')
         if min_rating:
-            queryset = queryset.filter(average_rating__gte=min_rating)
+            queryset = queryset.filter(
+                average_rating__gte=min_rating
+            )
+
+        search = self.request.query_params.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search) |
+                Q(description__icontains=search) |
+                Q(location__icontains=search) |
+                Q(provider__username__icontains=search) |
+                Q(keywords__icontains=search)
+            )
 
         return queryset
 
