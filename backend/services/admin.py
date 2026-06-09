@@ -17,6 +17,7 @@ class ServiceAdmin(admin.ModelAdmin):
         'price',
         'is_active',
         'created_at',
+        'keywords',
     )
     list_filter = ('category', 'pricing_type', 'is_active', 'created_at')
     search_fields = ('title', 'description', 'provider__username')

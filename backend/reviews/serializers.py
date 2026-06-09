@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Review
+from .ai_operations import validate_review_comment
 
 class ReviewSerializer(serializers.ModelSerializer):
     customer_username = serializers.CharField(source='customer.username', read_only=True)
@@ -36,6 +37,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         request = self.context.get('request')
         booking = attrs.get('booking')
+        comment = attrs.get('comment')
 
         if not booking:
             raise serializers.ValidationError({'booking': 'Booking is required.'})
@@ -48,6 +50,13 @@ class ReviewSerializer(serializers.ModelSerializer):
         if booking.customer != request.user:
             raise serializers.ValidationError({
                 'booking': 'You can only review your own completed bookings.'
+            })
+        
+        ai_result = validate_review_comment(comment)
+
+        if not ai_result["approved"]:
+            raise serializers.ValidationError({
+                'title': ai_result['reason']
             })
 
         if hasattr(booking, 'review'):

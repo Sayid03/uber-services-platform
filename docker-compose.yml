@@ -37,12 +37,12 @@ services:
       - .:/app
       - static_volume:/app/backend/staticfiles
       - media_volume:/app/backend/media
-    expose:
-      - "8000"
+    ports:
+      - "8000:8000"
     env_file:
       - backend/.env
     environment:
-      DJANGO_SETTINGS_MODULE: core.settings.prod
+      DJANGO_SETTINGS_MODULE: core.settings.dev
     depends_on:
       db:
         condition: service_healthy

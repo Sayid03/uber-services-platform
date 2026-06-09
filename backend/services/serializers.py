@@ -2,6 +2,7 @@ from rest_framework import serializers
 from typing import Optional
 
 from .models import Category, Service
+from .ai_operations import validate_service_name, generate_search_keywords
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,6 +23,7 @@ class ServiceSerializer(serializers.ModelSerializer):
             'provider_username',
             'category',
             'category_name',
+            'keywords',
             'title',
             'description',
             'pricing_type',
@@ -70,5 +72,27 @@ class ServiceSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 'price': 'Price cannot be negative.'
             })
+        
+        ai_result = validate_service_name(title, description)
+
+        if not ai_result['approved']:
+            raise serializers.ValidationError({
+                'title': ai_result['reason']
+            })
 
         return attrs
+    
+    def create(self, validated_data):
+        validated_data["keywords"] = generate_search_keywords(
+            validated_data["title"]
+        )
+
+        return super().create(validated_data)
+    
+    def update(self, instance, validated_data):
+        if "title" in validated_data:
+            validated_data["keywords"] = generate_search_keywords(
+                validated_data["title"]
+            )
+
+        return super().update(instance, validated_data)

@@ -74,7 +74,7 @@ class BookingStatusUpdateAPIView(generics.UpdateAPIView):
     PATCH: Update booking status as the provider assigned to that booking.
     """
     serializer_class = BookingStatusUpdateSerializer
-    permission_classes = [permissions.IsAuthenticated, IsBookingProvider]
+    permission_classes = [permissions.IsAuthenticated, IsBookingParticipant]
     lookup_field = "id"
     lookup_url_kwarg = "id"
 

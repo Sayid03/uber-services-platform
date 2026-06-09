@@ -64,6 +64,20 @@ class BookingStatusUpdateSerializer(serializers.ModelSerializer):
         booking = self.instance
         new_status = attrs.get('status')
 
+        request = self.context.get('request')
+        user = request.user
+
+        if user == booking.customer:
+            if booking.status not in ['pending', 'accepted']:
+                raise serializers.ValidationError(
+                    'You can only cancel pending or accepted bookings.'
+                )
+
+            if new_status != 'cancelled':
+                raise serializers.ValidationError(
+                    'Customers can only cancel bookings.'
+                )
+
         allowed_transitions = {
             'pending': ['accepted', 'cancelled'],
             'accepted': ['in_progress', 'cancelled'],
